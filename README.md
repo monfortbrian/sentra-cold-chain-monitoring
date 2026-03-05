@@ -1,27 +1,24 @@
 # Sentra
 
-Cold chain and power monitoring system for Raspberry Pi. Tracks fridge temperature and power stability at the edge, stores data locally in SQLite, serves a real-time dashboard, and triggers automated alerts via n8n workflows.
+Raspberry Pi–based cold chain and power monitoring system. Tracks fridge temperature and 
+power stability at the edge, stores data locally in SQLite, serves a live dashboard, 
+and triggers automated alerts via n8n. 
 
-Built for environments with unreliable power and limited connectivity.
+Built for unreliable power and low-connectivity environments.
 
 ## Architecture
 
 ```
-DS18B20 ──► monitor.py ──► SQLite ──► api_server.py ──► Dashboard (port 5000)
-                                │
-PiJuice  ──► monitor.py ──────►│        n8n (port 5678)
-                                │         │
-                                └─────────┼──► Telegram alerts
-                                          └──► Scheduled reports
+Still working on diagram
 ```
 
 ## Stack
 
 - **Hardware**: Raspberry Pi 4B, DS18B20 (1-Wire), PiJuice UPS HAT
-- **Data**: Python 3, SQLite, systemd services
+- **Data**: Python 3, SQLite
 - **API**: Flask, Flask-CORS
-- **Dashboard**: Static HTML, Chart.js, Lucide Icons
-- **Automation**: n8n (Docker), Telegram Bot API
+- **Dashboard**: HTML, Chart.js, Lucide Icons
+- **Automation**: n8n (via Docker), Telegram API
 - **Future**: RS485/Modbus (Waveshare adapter), Cloudflare Tunnel
 
 ## Structure
@@ -30,17 +27,17 @@ PiJuice  ──► monitor.py ──────►│        n8n (port 5678)
 sentra/
 ├── scripts/
 │   ├── monitor.py          # Sensor collection + anomaly detection
-│   └── api_server.py       # REST API + static file server
+│   └── api_server.py       # REST API
 ├── dashboard/
-│   └── index.html          # Monitoring console
+│   └── index.html          # Monitoring dashboard
 ├── docker/
 │   ├── docker-compose.yml  # n8n container config
-│   └── n8n-workflow.json   # Alert workflow template
+│   └── n8n_workflow.json   # Alert workflow
 ├── docs/
 │   └── WIRING.md           # Hardware connection guide
 ├── data/                   # SQLite DB (runtime, gitignored)
 ├── logs/                   # App logs (runtime, gitignored)
-└── netlify.toml            # Static deploy config
+└── netlify.toml            # Deploy config
 ```
 
 ## Setup
