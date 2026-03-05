@@ -1,0 +1,1329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sentra - Distributed Monitoring Intelligence</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%2318181b'/><text x='3' y='12' font-size='10' fill='white'>S</text></svg>"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --s0: #fafafa;
+        --s1: #fff;
+        --s2: #f4f4f5;
+        --bd: #e4e4e7;
+        --t0: #09090b;
+        --t1: #27272a;
+        --t2: #52525b;
+        --t3: #a1a1aa;
+        --safe: #15803d;
+        --safebg: #f0fdf4;
+        --safebd: #bbf7d0;
+        --warn: #a16207;
+        --warnbg: #fefce8;
+        --warnbd: #fef08a;
+        --danger: #b91c1c;
+        --dangerbg: #fef2f2;
+        --dangerbd: #fecaca;
+        --info: #1d4ed8;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "IBM Plex Sans",
+          -apple-system,
+          sans-serif;
+        background: var(--s0);
+        color: var(--t1);
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--t0);
+        text-decoration: none;
+      }
+      .fr {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 24px;
+      }
+
+      /* Header */
+      .hd {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+        border-bottom: 1px solid var(--bd);
+      }
+      .hd-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .hd-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--t0);
+      }
+      .hd-logo i {
+        width: 18px;
+        height: 18px;
+      }
+      .hd h1 {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        color: var(--t0);
+      }
+      .hd .sub {
+        font-size: 12px;
+        color: var(--t3);
+        margin-top: 2px;
+        font-family: "IBM Plex Mono", monospace;
+      }
+      .hd-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        font-family: "IBM Plex Mono", monospace;
+        padding: 5px 12px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .pill.on {
+        background: var(--safebg);
+        color: var(--safe);
+        border: 1px solid var(--safebd);
+      }
+      .pill.off {
+        background: var(--dangerbg);
+        color: var(--danger);
+        border: 1px solid var(--dangerbd);
+      }
+      .pill.dm {
+        background: var(--warnbg);
+        color: var(--warn);
+        border: 1px solid var(--warnbd);
+      }
+      .pill .ind {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: bk 2.4s ease-in-out infinite;
+      }
+      @keyframes bk {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .abl {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t2);
+        padding: 5px 10px;
+        border: 1px solid var(--bd);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: border-color 0.2s;
+      }
+      .abl:hover {
+        border-color: var(--t3);
+      }
+      .abl i {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* Modal overlay */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(9, 9, 11, 0.4);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-overlay.visible {
+        display: flex;
+      }
+      .modal {
+        background: var(--s1);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        padding: 28px;
+        width: 100%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+      }
+      .modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--t3);
+        padding: 4px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+      }
+      .modal-close:hover {
+        color: var(--t0);
+      }
+      .modal-close i {
+        width: 16px;
+        height: 16px;
+      }
+      .modal h3 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--t0);
+        margin-bottom: 12px;
+        padding-right: 32px;
+      }
+      .modal p {
+        font-size: 13px;
+        color: var(--t2);
+        line-height: 1.7;
+        margin-bottom: 12px;
+      }
+      .modal .specs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--bd);
+      }
+      .modal .spec {
+        padding: 10px 12px;
+        background: var(--s2);
+        border-radius: 4px;
+      }
+      .modal .spec-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--t3);
+        margin-bottom: 3px;
+      }
+      .modal .spec-value {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--t0);
+      }
+      .modal .cta-row {
+        margin-top: 16px;
+        padding-top: 16px;
+      }
+      .modal .cta-row a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--s1);
+        background: var(--t0);
+        padding: 8px 16px;
+        border-radius: 5px;
+        transition: opacity 0.2s;
+      }
+      .modal .cta-row a:hover {
+        opacity: 0.85;
+      }
+      .modal .cta-row a i {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* Offline banner */
+      .off-banner {
+        display: none;
+        background: var(--s1);
+        border: 1px solid var(--bd);
+        border-radius: 6px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+      }
+      .off-banner.visible {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .off-banner .ob-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--s2);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--t3);
+        flex-shrink: 0;
+      }
+      .off-banner .ob-icon i {
+        width: 16px;
+        height: 16px;
+      }
+      .off-banner h3 {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--t0);
+        margin-bottom: 2px;
+      }
+      .off-banner p {
+        font-size: 11px;
+        color: var(--t3);
+        line-height: 1.5;
+      }
+      .off-banner .ob-cta {
+        margin-top: 6px;
+      }
+      .off-banner .ob-cta a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--t1);
+        padding: 4px 10px;
+        border: 1px solid var(--bd);
+        border-radius: 4px;
+        font-family: "IBM Plex Mono", monospace;
+        transition: border-color 0.2s;
+      }
+      .off-banner .ob-cta a:hover {
+        border-color: var(--t0);
+      }
+      .off-banner .ob-cta a i {
+        width: 11px;
+        height: 11px;
+      }
+
+      /* Metrics */
+      .ms {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1px;
+        background: var(--bd);
+        border: 1px solid var(--bd);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+      .m {
+        background: var(--s1);
+        padding: 18px 20px;
+      }
+      .m-icon {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .m-icon i {
+        width: 13px;
+        height: 13px;
+        color: var(--t3);
+      }
+      .ml {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--t3);
+      }
+      .mv {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 26px;
+        font-weight: 500;
+        line-height: 1;
+        color: var(--t0);
+      }
+      .mv.safe {
+        color: var(--safe);
+      }
+      .mv.warn {
+        color: var(--warn);
+      }
+      .mv.danger {
+        color: var(--danger);
+      }
+      .md {
+        font-size: 11px;
+        color: var(--t3);
+        margin-top: 5px;
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      /* Charts */
+      .cg {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .pn {
+        background: var(--s1);
+        border: 1px solid var(--bd);
+        border-radius: 6px;
+        padding: 20px;
+      }
+      .pt {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--t3);
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .pt .tg {
+        font-size: 10px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 3px;
+        background: var(--s2);
+        color: var(--t2);
+      }
+      .cw {
+        position: relative;
+        height: 220px;
+      }
+
+      /* Incidents */
+      .ic {
+        background: var(--s1);
+        border: 1px solid var(--bd);
+        border-radius: 6px;
+        margin-bottom: 24px;
+      }
+      .ich {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--bd);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .ich-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ich-left h2 {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--t3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ich-left h2 i {
+        width: 13px;
+        height: 13px;
+      }
+      .ich-left .ct {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--t3);
+        background: var(--s2);
+        padding: 2px 8px;
+        border-radius: 3px;
+      }
+      .export-wrap {
+        position: relative;
+      }
+      .export-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--t2);
+        padding: 5px 10px;
+        border: 1px solid var(--bd);
+        border-radius: 4px;
+        background: var(--s1);
+        cursor: pointer;
+        font-family: "IBM Plex Mono", monospace;
+        transition: border-color 0.2s;
+      }
+      .export-btn:hover {
+        border-color: var(--t3);
+      }
+      .export-btn i {
+        width: 12px;
+        height: 12px;
+      }
+      .export-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+        background: var(--s1);
+        border: 1px solid var(--bd);
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        z-index: 10;
+        min-width: 120px;
+        overflow: hidden;
+      }
+      .export-menu.visible {
+        display: block;
+      }
+      .export-menu button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 8px 12px;
+        border: none;
+        background: none;
+        font-size: 11px;
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--t1);
+        cursor: pointer;
+      }
+      .export-menu button:hover {
+        background: var(--s2);
+      }
+      .ir {
+        display: grid;
+        grid-template-columns: 8px 100px 1fr 140px;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--s2);
+        font-size: 13px;
+      }
+      .ir:last-child {
+        border-bottom: none;
+      }
+      .si {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+      }
+      .si.CRITICAL {
+        background: var(--danger);
+      }
+      .si.HIGH {
+        background: var(--warn);
+      }
+      .si.WARNING {
+        background: var(--info);
+      }
+      .itp {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--t2);
+      }
+      .im {
+        color: var(--t1);
+        font-size: 13px;
+      }
+      .itm {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--t3);
+        text-align: right;
+      }
+      .es {
+        padding: 48px 20px;
+        text-align: center;
+        color: var(--t3);
+        font-size: 13px;
+      }
+      .es .lb {
+        display: inline-block;
+        padding: 3px 10px;
+        background: var(--safebg);
+        border: 1px solid var(--safebd);
+        color: var(--safe);
+        border-radius: 3px;
+        font-size: 11px;
+        font-family: "IBM Plex Mono", monospace;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      .ft {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 16px;
+        font-size: 11px;
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--t3);
+      }
+
+      @media (max-width: 900px) {
+        .cg {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 700px) {
+        .fr {
+          padding: 20px 16px;
+        }
+        .ms {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .ir {
+          grid-template-columns: 8px 1fr;
+        }
+        .itp,
+        .itm {
+          display: none;
+        }
+        .hd {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .hd-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .ft {
+          flex-direction: column;
+        }
+        .modal {
+          margin: 16px;
+          max-width: calc(100% - 32px);
+        }
+        .modal .specs {
+          grid-template-columns: 1fr;
+        }
+        .off-banner.visible {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fr">
+      <header class="hd">
+        <div class="hd-left">
+          <div class="hd-logo"><i data-lucide="thermometer-snowflake"></i></div>
+          <div>
+            <h1>Sentra</h1>
+            <div class="sub">Distributed Monitoring Intelligence &middot; v1.0</div>
+          </div>
+        </div>
+        <div class="hd-right">
+          <span class="abl" onclick="openAbout()"
+            ><i data-lucide="info" style="width: 10px; height: 10px"></i>
+            About</span
+          >
+          <div class="pill on" id="sp">
+            <div class="ind"></div>
+            <span id="sl">connecting</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- About modal -->
+      <div
+        class="modal-overlay"
+        id="aboutOverlay"
+        onclick="if (event.target === this) closeAbout();"
+      >
+        <div class="modal">
+          <button class="modal-close" onclick="closeAbout()">
+            <i data-lucide="x" style="width: 13px; height: 13px"></i>
+          </button>
+          <h3>Sentra</h3>
+          <p>
+            Intelligent edge monitoring for cold chain and energy reliability. Real-time temperature and
+            power tracking with on-device anomaly detection. Offline-first, locally resilient, and cloud-synced
+            when connectivity returns.
+            <a href="https://www.notion.so/Sentra-31ac4cf6cf5b802b8a33f1bef121e9c3" target="_blank" rel="noopener noreferrer" style="color:var(--t2);text-decoration:underline">read case study</a>
+          </p>
+          <div class="specs">
+            <div class="spec">
+              <div class="spec-label">Platform</div>
+              <div class="spec-value">Raspberry Pi 4B + PiJuice UPS</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Sensors</div>
+              <div class="spec-value">DS18B20 1-Wire, RS485 Modbus</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Stack</div>
+              <div class="spec-value">Python, Flask, SQLite, Docker</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Automation</div>
+              <div class="spec-value">n8n workflows, Telegram</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Architecture</div>
+              <div class="spec-value">Offline-first edge computing</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Sector</div>
+              <div class="spec-value">Health, Agriculture, Energy, Cold Chain,...</div>
+            </div>
+          </div>
+          <div class="ft">
+            <div class="cta-row">
+            <a href="mailto:monfortnkurunziza0@gmail.com"
+              ><i data-lucide="mail" style="width: 13px; height: 13px"></i>
+            Say hello</a
+            >
+          </div>
+          <div class="cta-row">
+            <a href="https://github.com/monfortbrian/sentra-cold-chain-monitoring"
+              ><i data-lucide="github" style="width: 13px; height: 13px"></i>
+            View repository</a
+            >
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="off-banner" id="offBanner">
+        <div class="ob-icon">
+          <i data-lucide="wifi-off" style="width: 13px; height: 13px"></i>
+        </div>
+        <div>
+          <h3>Device offline - showing last recorded data</h3>
+          <p>
+            The monitoring node is unreachable. It may be powered down or on a
+            private network. Data below is from the most recent session. The
+            system logs locally and syncs when online.
+          </p>
+          <div class="ob-cta">
+            <a href="mailto:monfortnkurunziza0@gmail.com"
+              ><i data-lucide="mail" style="width: 13px; height: 13px"></i>
+              say hello</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="ms">
+        <div class="m">
+          <div class="m-icon">
+            <i
+              data-lucide="thermometer"
+              style="width: 13px; height: 13px; color: var(--t3)"
+            ></i
+            ><span class="ml">Temperature</span>
+          </div>
+          <div class="mv" id="mT">--</div>
+          <div class="md" id="mTd">2.0 – 8.0 &deg;C safe</div>
+        </div>
+        <div class="m">
+          <div class="m-icon">
+            <i
+              data-lucide="battery-charging"
+              style="width: 13px; height: 13px; color: var(--t3)"
+            ></i
+            ><span class="ml">Battery</span>
+          </div>
+          <div class="mv" id="mB">--</div>
+          <div class="md" id="mBd">--</div>
+        </div>
+        <div class="m">
+          <div class="m-icon">
+            <i
+              data-lucide="plug-zap"
+              style="width: 13px; height: 13px; color: var(--t3)"
+            ></i
+            ><span class="ml">Power</span>
+          </div>
+          <div class="mv" id="mP">--</div>
+          <div class="md" id="mPd">--</div>
+        </div>
+        <div class="m">
+          <div class="m-icon">
+            <i
+              data-lucide="alert-triangle"
+              style="width: 13px; height: 13px; color: var(--t3)"
+            ></i
+            ><span class="ml">Incidents</span>
+          </div>
+          <div class="mv" id="mI">0</div>
+          <div class="md" id="mId">--</div>
+        </div>
+        <div class="m">
+          <div class="m-icon">
+            <i
+              data-lucide="shield-check"
+              style="width: 13px; height: 13px; color: var(--t3)"
+            ></i
+            ><span class="ml">Compliance</span>
+          </div>
+          <div class="mv" id="mC">--</div>
+          <div class="md">24h in range</div>
+        </div>
+      </div>
+
+      <div class="cg">
+        <div class="pn">
+          <div class="pt">
+            <span
+              ><i
+                data-lucide="activity"
+                style="
+                  width: 12px;
+                  height: 12px;
+                  display: inline;
+                  vertical-align: -2px;
+                  margin-right: 4px;
+                "
+              ></i
+              >Temperature - 24h window</span
+            ><span class="tg" id="tTg">--</span>
+          </div>
+          <div class="cw"><canvas id="tCv"></canvas></div>
+        </div>
+        <div class="pn">
+          <div class="pt">
+            <span
+              ><i
+                data-lucide="battery"
+                style="
+                  width: 12px;
+                  height: 12px;
+                  display: inline;
+                  vertical-align: -2px;
+                  margin-right: 4px;
+                "
+              ></i
+              >Battery level</span
+            ><span class="tg">24h</span>
+          </div>
+          <div class="cw"><canvas id="bCv"></canvas></div>
+        </div>
+      </div>
+
+      <div class="ic">
+        <div class="ich">
+          <div class="ich-left">
+            <h2><i data-lucide="file-warning"></i> Incident log</h2>
+            <span class="ct" id="iCt">0 events</span>
+          </div>
+          <div class="export-wrap">
+            <button class="export-btn" onclick="toggleExport()">
+              <i data-lucide="download" style="width: 13px; height: 13px"></i>
+              Export
+            </button>
+            <div class="export-menu" id="exportMenu">
+              <button onclick="exportIncidents('csv')">CSV</button>
+              <button onclick="exportIncidents('json')">JSON</button>
+            </div>
+          </div>
+        </div>
+        <div id="iL">
+          <div class="es">
+            <div class="lb">ALL CLEAR</div>
+            <p>No incidents recorded</p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="ft">
+        <span>Last sync: <span id="lS">--</span></span
+        ><span>Readings: <span id="tR">0</span></span
+        ><span
+          >
+          <a
+            href="mailto:monfortnkurunziza0@gmail.com" style="color:var(--t2);text-decoration:underline"
+            >Let's collaborate</a> &middot;
+          <a
+            href="https://github.com/monfortbrian/sentra-cold-chain-monitoring" style="color:var(--t2);text-decoration:underline"
+            >Clone Repo</a
+          ></span
+        >
+      </footer>
+    </div>
+
+    <script>
+      const API = window.location.origin + "/api";
+      let TC,
+        BC,
+        isLive = false,
+        incidentData = [];
+      const grd = { color: "rgba(0,0,0,0.04)" },
+        tk = {
+          color: "#a1a1aa",
+          font: { family: "'IBM Plex Mono',monospace", size: 10 },
+        };
+      const ttCfg = {
+        backgroundColor: "#18181b",
+        titleColor: "#fafafa",
+        bodyColor: "#d4d4d8",
+        titleFont: { family: "'IBM Plex Mono',monospace", size: 11 },
+        bodyFont: { family: "'IBM Plex Mono',monospace", size: 11 },
+        padding: 10,
+        cornerRadius: 4,
+        displayColors: false,
+      };
+      Chart.defaults.font.family = "'IBM Plex Sans',sans-serif";
+
+      function openAbout() {
+        document.getElementById("aboutOverlay").classList.add("visible");
+        lucide.createIcons();
+      }
+      function closeAbout() {
+        document.getElementById("aboutOverlay").classList.remove("visible");
+      }
+
+      function toggleExport() {
+        document.getElementById("exportMenu").classList.toggle("visible");
+      }
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".export-wrap"))
+          document.getElementById("exportMenu").classList.remove("visible");
+      });
+
+      function exportIncidents(format) {
+        document.getElementById("exportMenu").classList.remove("visible");
+        if (!incidentData.length) return;
+        let content, filename, type;
+        if (format === "json") {
+          content = JSON.stringify(incidentData, null, 2);
+          filename = "sentra-incidents.json";
+          type = "application/json";
+        } else {
+          const headers = "timestamp,type,severity,message,value\n";
+          const rows = incidentData
+            .map(
+              (i) =>
+                `"${i.timestamp}","${i.incident_type}","${i.severity}","${i.message}",${i.value}`,
+            )
+            .join("\n");
+          content = headers + rows;
+          filename = "sentra-incidents.csv";
+          type = "text/csv";
+        }
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function initC() {
+        TC = new Chart(document.getElementById("tCv").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Temperature",
+                data: [],
+                borderColor: "#18181b",
+                backgroundColor: "rgba(24,24,27,0.04)",
+                borderWidth: 1.5,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 0,
+                pointHitRadius: 8,
+              },
+              {
+                label: "Upper limit",
+                data: [],
+                borderColor: "rgba(185,28,28,0.3)",
+                borderDash: [4, 4],
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false,
+              },
+              {
+                label: "Lower limit",
+                data: [],
+                borderColor: "rgba(29,78,216,0.3)",
+                borderDash: [4, 4],
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: {
+                position: "top",
+                labels: {
+                  boxWidth: 8,
+                  boxHeight: 8,
+                  padding: 16,
+                  usePointStyle: true,
+                  pointStyle: "rectRounded",
+                  font: { size: 10, family: "'IBM Plex Mono',monospace" },
+                  color: "#a1a1aa",
+                },
+              },
+              tooltip: ttCfg,
+            },
+            scales: {
+              x: {
+                grid: grd,
+                ticks: { ...tk, maxTicksLimit: 8, maxRotation: 0 },
+                border: { color: "#e4e4e7" },
+              },
+              y: {
+                grid: grd,
+                ticks: tk,
+                border: { color: "#e4e4e7" },
+                suggestedMin: 0,
+                suggestedMax: 12,
+              },
+            },
+          },
+        });
+        BC = new Chart(document.getElementById("bCv").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                data: [],
+                borderColor: "#15803d",
+                backgroundColor: "rgba(21,128,61,0.06)",
+                borderWidth: 1.5,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: ttCfg },
+            scales: {
+              x: {
+                grid: grd,
+                ticks: { ...tk, maxTicksLimit: 6, maxRotation: 0 },
+                border: { color: "#e4e4e7" },
+              },
+              y: {
+                grid: grd,
+                ticks: tk,
+                border: { color: "#e4e4e7" },
+                min: 0,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+
+      function fmt(s) {
+        if (!s) return "--";
+        return new Date(s).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+      function fmtF(s) {
+        if (!s) return "--";
+        return new Date(s).toLocaleString([], {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function loadDemo() {
+        document.getElementById("mT").textContent = "4.7 \u00B0C";
+        document.getElementById("mT").className = "mv safe";
+        document.getElementById("mTd").textContent = "within range";
+        document.getElementById("mB").textContent = "87%";
+        document.getElementById("mB").className = "mv safe";
+        document.getElementById("mBd").textContent = "CHARGING_FROM_IN";
+        document.getElementById("mP").textContent = "Mains";
+        document.getElementById("mP").className = "mv safe";
+        document.getElementById("mPd").textContent = "stable";
+        document.getElementById("mI").textContent = "2";
+        document.getElementById("mI").className = "mv danger";
+        document.getElementById("mId").textContent = "unacknowledged";
+        document.getElementById("mC").textContent = "97%";
+        document.getElementById("mC").className = "mv safe";
+        document.getElementById("tR").textContent = "14,832";
+        document.getElementById("tTg").textContent = "288 readings";
+        const n = Date.now(),
+          l = [],
+          t = [],
+          b = [];
+        for (let i = 288; i >= 0; i--) {
+          l.push(
+            new Date(n - i * 3e5).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          );
+          let v = 4.5 + Math.sin(i * 0.05) * 1.5 + (Math.random() - 0.5) * 0.4;
+          if (i === 180) v = 9.2;
+          if (i === 179) v = 8.1;
+          if (i === 178) v = 6.8;
+          t.push(+v.toFixed(1));
+          b.push(
+            Math.round(
+              Math.max(
+                25,
+                Math.min(
+                  100,
+                  85 + Math.sin(i * 0.02) * 12 + (Math.random() - 0.5) * 2,
+                ),
+              ),
+            ),
+          );
+        }
+        TC.data.labels = l;
+        TC.data.datasets[0].data = t;
+        TC.data.datasets[1].data = Array(l.length).fill(8);
+        TC.data.datasets[2].data = Array(l.length).fill(2);
+        TC.update();
+        BC.data.labels = l;
+        BC.data.datasets[0].data = b;
+        BC.update();
+        incidentData = [
+          {
+            timestamp: "2026-03-04T14:30:22Z",
+            incident_type: "TEMP_HIGH",
+            severity: "CRITICAL",
+            message: "Temperature 9.2\u00B0C exceeds safe limit (8.0\u00B0C)",
+            value: 9.2,
+          },
+          {
+            timestamp: "2026-03-03T22:15:08Z",
+            incident_type: "POWER_OUTAGE",
+            severity: "HIGH",
+            message: "Main power lost. Running on battery at 72%",
+            value: 72,
+          },
+          {
+            timestamp: "2026-03-03T09:45:31Z",
+            incident_type: "TEMP_RISING_FAST",
+            severity: "WARNING",
+            message: "Temperature rising +2.3\u00B0C over 5 readings",
+            value: 2.3,
+          },
+        ];
+        document.getElementById("iCt").textContent = "3 events";
+        document.getElementById("iL").innerHTML = incidentData
+          .map(
+            (i) =>
+              `<div class="ir"><div class="si ${i.severity}"></div><span class="itp">${i.incident_type}</span><span class="im">${i.message}</span><span class="itm">${fmtF(i.timestamp)}</span></div>`,
+          )
+          .join("");
+      }
+
+      async function fS() {
+        try {
+          const d = await (await fetch(API + "/status")).json(),
+            t = d.current.temperature_c,
+            b = d.current.battery_pct,
+            pw = d.current.power_input;
+          if (!isLive) {
+            isLive = true;
+            document.getElementById("sp").className = "pill on";
+            document.getElementById("sl").textContent = "online";
+            document.getElementById("offBanner").classList.remove("visible");
+          }
+          const te = document.getElementById("mT");
+          te.textContent = t != null ? t + " \u00B0C" : "\u2014";
+          te.className =
+            "mv" + (t == null ? "" : t >= 2 && t <= 8 ? " safe" : " danger");
+          document.getElementById("mTd").textContent =
+            t != null
+              ? t >= 2 && t <= 8
+                ? "within range"
+                : "OUT OF RANGE"
+              : "awaiting sensor";
+          const be = document.getElementById("mB");
+          be.textContent = b != null ? b + "%" : "\u2014";
+          be.className =
+            "mv" +
+            (b == null ? "" : b > 50 ? " safe" : b > 20 ? " warn" : " danger");
+          document.getElementById("mBd").textContent =
+            d.current.charging || "\u2014";
+          const pe = document.getElementById("mP");
+          if (pw === "PRESENT" || pw === "WEAK") {
+            pe.textContent = "Mains";
+            pe.className = "mv safe";
+            document.getElementById("mPd").textContent =
+              pw === "WEAK" ? "weak input" : "stable";
+          } else if (pw === "NOT_PRESENT" || pw === "BAD") {
+            pe.textContent = "Battery";
+            pe.className = "mv warn";
+            document.getElementById("mPd").textContent = "mains disconnected";
+          } else {
+            pe.textContent = pw || "\u2014";
+            pe.className = "mv";
+            document.getElementById("mPd").textContent = "\u2014";
+          }
+          const inc = d.stats.unacknowledged_incidents,
+            ie = document.getElementById("mI");
+          ie.textContent = inc;
+          ie.className = "mv" + (inc > 0 ? " danger" : "");
+          document.getElementById("mId").textContent =
+            inc > 0 ? "unacknowledged" : "all clear";
+          document.getElementById("tR").textContent =
+            d.stats.total_readings.toLocaleString();
+          document.getElementById("lS").textContent = fmt(d.current.timestamp);
+        } catch (e) {
+          if (isLive) {
+            isLive = false;
+            document.getElementById("sp").className = "pill off";
+            document.getElementById("sl").textContent = "offline";
+            document.getElementById("offBanner").classList.add("visible");
+            lucide.createIcons();
+          }
+        }
+      }
+
+      async function fT() {
+        try {
+          const d = await (
+              await fetch(API + "/temperature?hours=24&limit=500")
+            ).json(),
+            l = d.readings.map((r) => fmt(r.timestamp)),
+            t = d.readings.map((r) => r.temperature_c);
+          TC.data.labels = l;
+          TC.data.datasets[0].data = t;
+          TC.data.datasets[1].data = Array(l.length).fill(8);
+          TC.data.datasets[2].data = Array(l.length).fill(2);
+          TC.update("none");
+          document.getElementById("tTg").textContent =
+            d.stats.count + " readings";
+          if (d.stats.count > 0) {
+            const p = Math.round(
+              (t.filter((v) => v >= 2 && v <= 8).length / t.length) * 100,
+            );
+            document.getElementById("mC").textContent = p + "%";
+            document.getElementById("mC").className =
+              "mv" + (p >= 95 ? " safe" : p >= 80 ? " warn" : " danger");
+          }
+        } catch (e) {}
+      }
+
+      async function fB() {
+        try {
+          const d = await (await fetch(API + "/battery?hours=24")).json();
+          BC.data.labels = d.readings.map((r) => fmt(r.timestamp));
+          BC.data.datasets[0].data = d.readings.map((r) => r.battery_pct);
+          BC.update("none");
+        } catch (e) {}
+      }
+
+      async function fI() {
+        try {
+          const d = await (await fetch(API + "/incidents?limit=15")).json();
+          incidentData = d.incidents;
+          document.getElementById("iCt").textContent = d.count + " events";
+          const el = document.getElementById("iL");
+          if (!d.incidents.length) {
+            el.innerHTML =
+              '<div class="es"><div class="lb">ALL CLEAR</div><p>No incidents recorded</p></div>';
+            return;
+          }
+          el.innerHTML = d.incidents
+            .map(
+              (i) =>
+                `<div class="ir"><div class="si ${i.severity}"></div><span class="itp">${i.incident_type}</span><span class="im">${i.message}</span><span class="itm">${fmtF(i.timestamp)}</span></div>`,
+            )
+            .join("");
+        } catch (e) {}
+      }
+
+      async function boot() {
+        initC();
+        lucide.createIcons();
+        try {
+          const r = await fetch(API + "/health");
+          if (r.ok) {
+            isLive = true;
+            document.getElementById("sp").className = "pill on";
+            document.getElementById("sl").textContent = "online";
+            await Promise.all([fS(), fT(), fB(), fI()]);
+            setInterval(fS, 3e4);
+            setInterval(fT, 6e4);
+            setInterval(fB, 6e4);
+            setInterval(fI, 6e4);
+          } else throw 0;
+        } catch (e) {
+          loadDemo();
+          const isLocal =
+            window.location.port === "5000" ||
+            window.location.hostname === "localhost" ||
+            window.location.hostname.match(/^(\d+\.){3}\d+$/);
+          if (isLocal) {
+            document.getElementById("sp").className = "pill dm";
+            document.getElementById("sl").textContent = "demo";
+          } else {
+            document.getElementById("sp").className = "pill off";
+            document.getElementById("sl").textContent = "offline";
+            document.getElementById("offBanner").classList.add("visible");
+            lucide.createIcons();
+          }
+        }
+      }
+      window.addEventListener("DOMContentLoaded", boot);
+    </script>
+  </body>
+</html>
