@@ -1,20 +1,18 @@
 # Sentra
 
-Raspberry Pi–based cold chain and power monitoring system. Tracks fridge temperature and 
-power stability at the edge, stores data locally in SQLite, serves a live dashboard, 
-and triggers automated alerts via n8n. 
+Raspberry Pi–based cold chain and power monitoring system. Tracks fridge temperature and
+power stability at the edge, stores data locally in SQLite, serves a live dashboard,
+and triggers automated alerts via n8n.
 
 Built for unreliable power and low-connectivity environments.
 
 ## Architecture
 
-```
-Still working on diagram
-```
+![Sentra Architecture](docs/architecture.svg)
 
 ## Stack
 
-- **Hardware**: Raspberry Pi 4B, DS18B20 (1-Wire), PiJuice UPS HAT
+- **Hardware**: Raspberry Pi 4B, DS18B20, PiJuice UPS HAT
 - **Data**: Python 3, SQLite
 - **API**: Flask, Flask-CORS
 - **Dashboard**: HTML, Chart.js, Lucide Icons

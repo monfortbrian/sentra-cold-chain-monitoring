@@ -1,0 +1,270 @@
+{
+  "name": "Sentra - Alert & Reporting Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5000/api/status",
+        "options": {}
+      },
+      "name": "Get Current Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -592,
+        160
+      ],
+      "typeVersion": 4.2,
+      "id": "162d8658-75ab-43a4-a373-176ee866a9b4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.current.temperature_c }}",
+              "operation": "larger",
+              "value2": 8
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Temp > 8°C?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -160,
+        -96
+      ],
+      "typeVersion": 2,
+      "id": "13f3c1f5-9ace-470c-94e4-1ea7019c9fb0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.current.battery_pct }}",
+              "operation": "smallerEqual",
+              "value2": 20
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Battery <= 20%?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -160,
+        160
+      ],
+      "typeVersion": 2,
+      "id": "b41a9be5-592d-4af3-8921-72e2f0e76b34"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=SENTRA ALERT - TEMPERATURE HIGH\n\n🌡 Current: {{ $json.current.temperature_c }}°C\n Safe limit: 8°C\n Battery: {{ $json.current.battery_pct }}%\n Power: {{ $json.current.power_input }}\n Time: {{ $now.toFormat(\"yyyy-LL-dd HH:mm\") }}\n\nACTION REQUIRED: Check vaccine fridge immediately!",
+        "additionalFields": {}
+      },
+      "name": "Alert Temp High",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        192,
+        -112
+      ],
+      "typeVersion": 1.2,
+      "id": "d22b50f3-74b4-460c-8b35-b8bef0bfefaf",
+      "webhookId": "7aed47e2-c16d-44b2-866a-a08b5fd8a3fa",
+      "credentials": {
+        "telegramApi": {
+          "id": "vsPcYb3FxQAx3LYV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "= SENTRA ALERT - LOW BATTERY\n\n Battery: {{ $json.current.battery_pct }}%\n Power: {{ $json.current.power_input }}\n Temp: {{ $json.current.temperature_c }}°C\n Time: {{ $now.toFormat(\"yyyy-LL-dd HH:mm\") }}\n\nPower may be interrupted. Check power supply.",
+        "additionalFields": {}
+      },
+      "name": "Alert Battery Low",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        208,
+        144
+      ],
+      "typeVersion": 1.2,
+      "id": "dff298d4-d4a3-48df-951b-ed292eb689db",
+      "webhookId": "0b19ec62-7489-486d-a830-42855a892254",
+      "credentials": {
+        "telegramApi": {
+          "id": "vsPcYb3FxQAx3LYV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5000/api/summary?days=1",
+        "options": {}
+      },
+      "name": "Get Daily Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -592,
+        432
+      ],
+      "typeVersion": 4.2,
+      "id": "b666ac17-f8cc-4835-911a-99cb57beb736"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=SENTRA DAILY REPORT - {{ $now.toFormat(\"yyyy-LL-dd\") }}\n--------------------\n\n🌡 Temperature:\n   Min: {{ $json.temperature.min_c }}°C\n   Max: {{ $json.temperature.max_c }}°C\n   Avg: {{ $json.temperature.avg_c }}°C\n   Readings: {{ $json.temperature.readings_total }}\n\n Compliance: {{ $json.temperature.compliance_pct }}%\n Power Outages: {{ $json.power_outages }}\n Unsafe readings: {{ $json.temperature.readings_unsafe }}\n\n--------------------\nGenerated: {{ $json.generated_at }}",
+        "additionalFields": {}
+      },
+      "name": "Send Daily Report",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        208,
+        432
+      ],
+      "typeVersion": 1.2,
+      "id": "9658a13e-00f4-43ea-a904-96b0a019019c",
+      "webhookId": "9c1f431e-188a-4984-93aa-16063b291cbf",
+      "credentials": {
+        "telegramApi": {
+          "id": "vsPcYb3FxQAx3LYV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "name": "Check Every 2 Min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -928,
+        160
+      ],
+      "typeVersion": 1.2,
+      "id": "be1eebd7-e22f-4123-a23f-2e2a544187fa"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "name": "Daily at 8 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -928,
+        432
+      ],
+      "typeVersion": 1.2,
+      "id": "7099bced-1224-414f-9539-1a6aa08c544a"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Current Status": {
+      "main": [
+        [
+          {
+            "node": "Temp > 8°C?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Battery <= 20%?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Temp > 8°C?": {
+      "main": [
+        [
+          {
+            "node": "Alert Temp High",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Battery <= 20%?": {
+      "main": [
+        [
+          {
+            "node": "Alert Battery Low",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Daily Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Every 2 Min": {
+      "main": [
+        [
+          {
+            "node": "Get Current Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily at 8 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "81d11a37-7abe-45a2-9e69-b5f1566133b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "84a77b94db5b3125ef230e3c0775d32c2ba97a8569649c6c6ed539e8d2e59b79"
+  },
+  "id": "d8XDFyxFZ37yb9Q0",
+  "tags": []
+}
