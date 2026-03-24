@@ -1,7 +1,7 @@
 # Sentra
 
-Raspberry Pi–based cold chain and power monitoring system. Tracks fridge temperature and
-power stability at the edge, stores data locally in SQLite, serves a live dashboard,
+Raspberry Pi-based cold chain and power monitoring system. Tracks fridge temperature and
+power stability at the edge, stores data locally, serves a live dashboard,
 and triggers automated alerts via n8n.
 
 Built for unreliable power and low-connectivity environments.
